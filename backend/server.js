@@ -209,6 +209,16 @@ app.post('/api/auth/signin', async (req, res, next) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
     const result = await signIn(username, password);
+    
+    // Handle NEW_PASSWORD_REQUIRED challenge
+    if (result.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
+      return res.status(403).json({
+        error: 'NEW_PASSWORD_REQUIRED',
+        message: 'User must set a new password',
+        session: result.Session,
+      });
+    }
+    
     res.json({
       accessToken: result.AuthenticationResult.AccessToken,
       idToken: result.AuthenticationResult.IdToken,
@@ -217,6 +227,46 @@ app.post('/api/auth/signin', async (req, res, next) => {
   } catch (err) {
     console.error('Error signing in:', err);
     res.status(500).json({ error: err.message || 'Failed to sign in' });
+  }
+});
+
+// POST /api/auth/change-password - Handle NEW_PASSWORD_REQUIRED challenge
+app.post('/api/auth/change-password', async (req, res, next) => {
+  try {
+    const { username, newPassword, session } = req.body;
+    if (!username || !newPassword || !session) {
+      return res.status(400).json({ error: 'Username, new password, and session are required' });
+    }
+    
+    const { CognitoIdentityProviderClient, RespondToAuthChallengeCommand } = await import('@aws-sdk/client-cognito-identity-provider');
+    const client = new CognitoIdentityProviderClient({
+      region: process.env.AWS_REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+      },
+    });
+    
+    const command = new RespondToAuthChallengeCommand({
+      ClientId: process.env.COGNITO_CLIENT_ID,
+      ChallengeName: 'NEW_PASSWORD_REQUIRED',
+      Session: session,
+      ChallengeResponses: {
+        USERNAME: username,
+        NEW_PASSWORD: newPassword,
+      },
+    });
+    
+    const result = await client.send(command);
+    res.json({
+      accessToken: result.AuthenticationResult.AccessToken,
+      idToken: result.AuthenticationResult.IdToken,
+      refreshToken: result.AuthenticationResult.RefreshToken,
+      message: 'Password changed successfully',
+    });
+  } catch (err) {
+    console.error('Error changing password:', err);
+    res.status(500).json({ error: err.message || 'Failed to change password' });
   }
 });
 

@@ -7,12 +7,16 @@ const LogInWndw = ({ onLoginSuccess }) => {
   const location = useLocation();
   const message = location.state?.message;
 
-  const [mode, setMode] = useState('signin'); // 'signin' or 'signup'
+  const [mode, setMode] = useState('signin'); // 'signin', 'signup', or 'change-password'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
   const [confirmationCode, setConfirmationCode] = useState('');
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
+  const [passwordChangeSession, setPasswordChangeSession] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -101,6 +105,12 @@ const LogInWndw = ({ onLoginSuccess }) => {
           accessToken: data.accessToken,
           refreshToken: data.refreshToken,
         });
+      } else if (response.status === 403 && data.error === 'NEW_PASSWORD_REQUIRED') {
+        // User needs to set a new password
+        setNeedsPasswordChange(true);
+        setPasswordChangeSession(data.session);
+        setNewPassword('');
+        setConfirmPassword('');
       } else {
         setError(data.error || 'Sign in failed');
       }
@@ -112,15 +122,128 @@ const LogInWndw = ({ onLoginSuccess }) => {
     }
   };
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          newPassword,
+          session: passwordChangeSession,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Password changed successfully, log in the user
+        onLoginSuccess({
+          idToken: data.idToken,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+        });
+      } else {
+        setError(data.error || 'Failed to change password');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+      console.error('Password change error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setMode('signin');
     setUsername('');
     setPassword('');
     setEmail('');
     setConfirmationCode('');
+    setNewPassword('');
+    setConfirmPassword('');
     setNeedsConfirmation(false);
+    setNeedsPasswordChange(false);
+    setPasswordChangeSession('');
     setError('');
   };
+
+  if (needsPasswordChange) {
+    return (
+      <div className="bg-cream rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 border-2 border-darkGreen/30">
+        <h2 className="text-2xl font-serif font-bold text-vDarkGreen mb-4 text-center">
+          Set New Password
+        </h2>
+        <p className="text-sm text-gray-700 mb-4 text-center">
+          Your password has expired. Please set a new password to continue.
+        </p>
+        <form onSubmit={handlePasswordChange} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-vDarkGreen mb-1">
+              New Password
+            </label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-darkGreen/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-darkGreen"
+              placeholder="Enter new password"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-vDarkGreen mb-1">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-darkGreen/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-darkGreen"
+              placeholder="Confirm new password"
+              required
+            />
+          </div>
+          {error && (
+            <div className="text-red-600 text-sm bg-red-50 p-2 rounded">
+              {error}
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-darkGreen text-cream px-4 py-2 rounded-lg font-serif font-bold hover:bg-vDarkGreen transition-all disabled:opacity-50"
+          >
+            {loading ? 'Updating...' : 'Update Password'}
+          </button>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="w-full px-4 py-2 border border-darkGreen/30 text-vDarkGreen rounded-lg font-serif hover:bg-darkGreen/10 transition-all"
+          >
+            Cancel
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   if (needsConfirmation) {
     return (
