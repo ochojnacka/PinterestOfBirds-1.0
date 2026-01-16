@@ -37,7 +37,7 @@ const BirdCard = ({ bird, onFavorite, isFavorite }) => {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     onError={(e) => {
                         e.target.onerror = null; 
-                        e.target.src = 'https://via.placeholder.com/300x200?text=Brak+zdjęcia';
+                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSIjYWFhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+QnJhayB6ZGplY2nEmWNpYTwvdGV4dD48L3N2Zz4=';
                     }}
                 />
             </div>
