@@ -1,21 +1,28 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+// Load environment variables FIRST - before importing anything that uses them
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const envPath = path.join(__dirname, '.env');
+console.log('Loading .env from:', envPath);
+const dotenvResult = dotenv.config({ path: envPath });
+if (dotenvResult.error) {
+  console.warn('Warning: .env file not found or could not be loaded:', dotenvResult.error.message);
+} else {
+  console.log('.env file loaded successfully');
+}
+
+// NOW import modules that need environment variables
+import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { scanItems, putItem, queryItems, deleteItem } from './aws/dynamodb.js';
 import { uploadFile } from './aws/s3.js';
 import { auth } from './middleware/auth.js';
 import { signUp, signIn, confirmSignUp } from './aws/cognito.js';
-
-// Load environment variables
-dotenv.config();
-
-// ES module __dirname equivalent
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
