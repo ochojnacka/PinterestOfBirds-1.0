@@ -5,15 +5,14 @@ let s3Client = null;
 
 function getS3Client() {
   if (!s3Client) {
-    // Sprawdzamy czy zmienne środowiskowe są w ogóle wczytane
-    if (!process.env.AWS_REGION || !process.env.AWS_ACCESS_KEY_ID) {
-      console.error('BŁĄD: Brak zmiennych środowiskowych AWS w pliku .env!');
-    }
-
-    console.log('Inicjalizacja S3Client dla regionu:', process.env.AWS_REGION);
-
+    console.log('Creating S3Client with:', {
+      region: process.env.AWS_REGION,
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID ? 'SET' : 'MISSING',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ? 'SET' : 'MISSING',
+      bucket: process.env.S3_BUCKET_NAME,
+    });
     s3Client = new S3Client({
-      region: process.env.AWS_REGION, // Już nie wymuszamy us-east-1
+      region: process.env.AWS_REGION || 'us-east-1',
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
@@ -24,28 +23,26 @@ function getS3Client() {
 }
 
 export const uploadFile = async (key, body, contentType) => {
-  const bucketName = process.env.S3_BUCKET_NAME;
-  const region = process.env.AWS_REGION;
-
   const command = new PutObjectCommand({
-    Bucket: bucketName,
+    Bucket: process.env.S3_BUCKET_NAME || '',
     Key: key,
     Body: body,
     ContentType: contentType,
   });
-
   const result = await getS3Client().send(command);
-
-  // Budujemy poprawny URL dla Twojego regionu (eu-north-1)
-  // Struktura: https://bucket-name.s3.region.amazonaws.com/key
-  const url = `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
-  
+  const region = process.env.AWS_REGION || 'us-east-1';
+  let url;
+  if (region === 'us-east-1') {
+    url = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
+  } else {
+    url = `https://${process.env.S3_BUCKET_NAME}.s3.${region}.amazonaws.com/${key}`;
+  }
   return { ...result, Location: url };
 };
 
 export const getFile = async (key) => {
   const command = new GetObjectCommand({
-    Bucket: process.env.S3_BUCKET_NAME,
+    Bucket: process.env.S3_BUCKET_NAME || '',
     Key: key,
   });
   return await getS3Client().send(command);
@@ -53,7 +50,7 @@ export const getFile = async (key) => {
 
 export const getPresignedUrl = async (key, expiresIn = 3600) => {
   const command = new GetObjectCommand({
-    Bucket: process.env.S3_BUCKET_NAME,
+    Bucket: process.env.S3_BUCKET_NAME || '',
     Key: key,
   });
   return await getSignedUrl(getS3Client(), command, { expiresIn });
@@ -61,12 +58,10 @@ export const getPresignedUrl = async (key, expiresIn = 3600) => {
 
 export const deleteFile = async (key) => {
   const command = new DeleteObjectCommand({
-    Bucket: process.env.S3_BUCKET_NAME,
+    Bucket: process.env.S3_BUCKET_NAME || '',
     Key: key,
   });
   return await getS3Client().send(command);
 };
 
-// Eksportujemy funkcję, a nie wynik jej wywołania, 
-// aby uniknąć problemów z ładowaniem .env
-export default getS3Client;
+export default getS3Client();

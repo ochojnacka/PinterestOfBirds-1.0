@@ -1,31 +1,22 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
-let docClient = null;
+const client = new DynamoDBClient({
+  region: process.env.AWS_REGION || 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+  },
+});
 
-// Funkcja, która tworzy klienta dopiero przy pierwszym użyciu
-function getDocClient() {
-  if (!docClient) {
-    console.log('Inicjalizacja DynamoDB Client dla regionu:', process.env.AWS_REGION);
-    
-    const client = new DynamoDBClient({
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-      },
-    });
-    docClient = DynamoDBDocumentClient.from(client);
-  }
-  return docClient;
-}
+const docClient = DynamoDBDocumentClient.from(client);
 
 export const putItem = async (tableName, item) => {
   const command = new PutCommand({
     TableName: tableName,
     Item: item,
   });
-  return await getDocClient().send(command);
+  return await docClient.send(command);
 };
 
 export const getItem = async (tableName, key) => {
@@ -33,7 +24,7 @@ export const getItem = async (tableName, key) => {
     TableName: tableName,
     Key: key,
   });
-  return await getDocClient().send(command);
+  return await docClient.send(command);
 };
 
 export const queryItems = async (tableName, keyConditionExpression, expressionAttributeValues) => {
@@ -42,14 +33,14 @@ export const queryItems = async (tableName, keyConditionExpression, expressionAt
     KeyConditionExpression: keyConditionExpression,
     ExpressionAttributeValues: expressionAttributeValues,
   });
-  return await getDocClient().send(command);
+  return await docClient.send(command);
 };
 
 export const scanItems = async (tableName) => {
   const command = new ScanCommand({
     TableName: tableName,
   });
-  return await getDocClient().send(command);
+  return await docClient.send(command);
 };
 
 export const deleteItem = async (tableName, key) => {
@@ -57,8 +48,7 @@ export const deleteItem = async (tableName, key) => {
     TableName: tableName,
     Key: key,
   });
-  return await getDocClient().send(command);
+  return await docClient.send(command);
 };
 
-// Eksportujemy funkcję jako domyślną
-export default getDocClient;
+export default docClient;
