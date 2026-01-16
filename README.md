@@ -75,7 +75,7 @@ COGNITO_CLIENT_ID=your-client-id
 
 5. Start the development server:
 ```bash
-npm run dev
+npm start
 ```
 
 The backend server will run on `http://localhost:5000`
@@ -94,7 +94,7 @@ npm install
 
 3. Start the development server:
 ```bash
-npm run dev
+npx vite --host --port 3000
 ```
 
 The frontend will run on `http://localhost:3000`
@@ -158,12 +158,6 @@ sudo apt update && sudo apt upgrade -y
 # Install Node.js
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
-
-# Install PM2 for process management
-sudo npm install -g pm2
-
-# Install Nginx (optional, for reverse proxy)
-sudo apt install nginx -y
 ```
 
 ### 4. Deploy Application
@@ -179,51 +173,13 @@ cd ../frontend && npm install
 4. Build frontend:
 ```bash
 cd frontend
-npm run build
+npx vite --host --port 3000
 ```
 
-5. Start backend with PM2:
+5. Start backend:
 ```bash
 cd backend
-pm2 start server.js --name backend
-pm2 save
-pm2 startup
-```
-
-### 5. Configure Nginx (Optional)
-
-Create an Nginx configuration file:
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    # Frontend
-    location / {
-        root /path/to/frontend/dist;
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Backend API
-    location /api {
-        proxy_pass http://localhost:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-### 6. Set Up SSL (Optional)
-
-Use Let's Encrypt for free SSL certificates:
-
-```bash
-sudo apt install certbot python3-certbot-nginx -y
-sudo certbot --nginx -d your-domain.com
+npm start
 ```
 
 ## API Endpoints
