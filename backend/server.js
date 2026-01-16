@@ -109,8 +109,7 @@ app.post('/api/uploads', auth, upload.single('image'), async (req, res, next) =>
     const result = await uploadFile(
       fileKey,
       req.file.buffer,
-      req.file.mimetype,
-      'public-read'
+      req.file.mimetype
     );
 
     res.status(201).json({ success: true, imageUrl: result.Location });

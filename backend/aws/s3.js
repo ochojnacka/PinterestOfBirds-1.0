@@ -22,13 +22,12 @@ function getS3Client() {
   return s3Client;
 }
 
-export const uploadFile = async (key, body, contentType, acl = 'public-read') => {
+export const uploadFile = async (key, body, contentType) => {
   const command = new PutObjectCommand({
     Bucket: process.env.S3_BUCKET_NAME || '',
     Key: key,
     Body: body,
     ContentType: contentType,
-    ACL: acl,
   });
   const result = await getS3Client().send(command);
   const region = process.env.AWS_REGION || 'us-east-1';
