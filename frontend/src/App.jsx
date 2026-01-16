@@ -193,7 +193,7 @@ function App() {
       <Header />
 
       {location.pathname !== '/login' && (
-        <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <div className="fixed top-4 right-4 z-[100] flex gap-2">
           {!isLoggedIn ? (
             <LogInBtn />
           ) : (

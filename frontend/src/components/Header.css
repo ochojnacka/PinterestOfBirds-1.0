@@ -1,39 +1,15 @@
+/* header.css */
 .header {
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1rem 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  /* background-color: #fff;  <-- USUŃ TO, bo robi biały pasek */
+  /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); <-- USUŃ TO, jeśli nie chcesz cienia */
+  padding: 0; /* Zredukuj padding, żeby nie rozpychał Twojego gradientu */
+  position: relative; /* Zmień ze sticky na relative, jeśli Header ma znikać przy przewijaniu */
 }
 
+/* Jeśli znajoma dodała .logo i .nav, a Ty ich nie używasz w Headerze, to one nic nie psują,
+   ale .header-container może ograniczać szerokość Twojego gradientu. */
 .header-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  font-size: 1.5rem;
-  color: #e60023;
+  max-width: none; /* Pozwól gradientowi zająć całą szerokość */
   margin: 0;
-}
-
-.nav {
-  display: flex;
-  gap: 2rem;
-}
-
-.nav-link {
-  color: #333;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.nav-link:hover {
-  color: #e60023;
+  padding: 0;
 }
